@@ -42,6 +42,10 @@ class Block:
     variable name) and a value (the content). The agent edits these
     via tool calls during reasoning.
 
+    Invariants enforced on every mutation (not just construction):
+    - read_only blocks reject value changes after creation
+    - value length cannot exceed limit
+
     Examples:
         Block(label="persona", value="You are a cognitive twin of Dominic...")
         Block(label="human", value="Dominic is a founder based in Dubai...")
@@ -54,12 +58,39 @@ class Block:
     read_only: bool = False
     limit: int = 5000  # max chars for this block
 
+    # Track whether __init__ is complete (for __setattr__ guard)
+    _initialized: bool = False
+
     def __post_init__(self) -> None:
         if len(self.value) > self.limit:
             raise ValueError(
                 f"Block '{self.label}' value ({len(self.value)} chars) "
                 f"exceeds limit ({self.limit} chars)"
             )
+        object.__setattr__(self, "_initialized", True)
+
+    def __setattr__(self, name: str, val: object) -> None:
+        """Enforce read-only and limit invariants on every mutation."""
+        if name == "_initialized" or not self.__dict__.get("_initialized", False):
+            # Allow setting during __init__
+            object.__setattr__(self, name, val)
+            return
+
+        if name == "value":
+            if self.read_only:
+                raise ValueError(f"Block '{self.label}' is read-only")
+            if isinstance(val, str) and len(val) > self.limit:
+                raise ValueError(
+                    f"Block '{self.label}' value ({len(val)} chars) "
+                    f"exceeds limit ({self.limit} chars)"
+                )
+
+        if name == "read_only" and self.read_only:
+            # Cannot un-set read_only once set
+            if not val:
+                raise ValueError(f"Block '{self.label}' is read-only and cannot be unlocked")
+
+        object.__setattr__(self, name, val)
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +136,8 @@ class Message:
     - tool: tool execution result
     """
 
+    VALID_ROLES = frozenset({"system", "user", "assistant", "tool"})
+
     role: str  # system | user | assistant | tool
     content: str = ""
     id: str = field(default_factory=_new_id)
@@ -113,6 +146,13 @@ class Message:
     tool_call_id: str = ""  # for role=tool responses
     name: str = ""  # tool name for role=tool
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.role not in self.VALID_ROLES:
+            raise ValueError(
+                f"Invalid message role '{self.role}'. "
+                f"Must be one of: {', '.join(sorted(self.VALID_ROLES))}"
+            )
 
     def to_openai_dict(self) -> dict[str, Any]:
         """Convert to OpenAI chat completion message format."""
@@ -213,20 +253,21 @@ class AgentState:
         return self.blocks[label]
 
     def set_block(self, block: Block) -> None:
-        """Add or replace a block."""
+        """Add or replace a block. Cannot replace a read-only block."""
+        existing = self.blocks.get(block.label)
+        if existing is not None and existing.read_only:
+            raise ValueError(
+                f"Block '{block.label}' is read-only and cannot be replaced"
+            )
         self.blocks[block.label] = block
 
     def update_block_value(self, label: str, value: str) -> None:
-        """Update a block's value. Validates limit."""
+        """Update a block's value.
+
+        Delegates to Block.__setattr__ which enforces read-only and limit.
+        """
         block = self.get_block(label)
-        if block.read_only:
-            raise ValueError(f"Block '{label}' is read-only")
-        if len(value) > block.limit:
-            raise ValueError(
-                f"Block '{label}' value ({len(value)} chars) "
-                f"exceeds limit ({block.limit} chars)"
-            )
-        block.value = value
+        block.value = value  # Block.__setattr__ enforces invariants
 
     def compile_memory(self) -> str:
         """Render all blocks into a single memory string for the prompt."""

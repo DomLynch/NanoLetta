@@ -289,3 +289,71 @@ class TestAgentState:
         )
         memory = state.compile_memory()
         assert "(Current agent posture)" in memory
+
+    def test_set_block_cannot_replace_read_only(self):
+        """set_block should reject replacing a read-only block."""
+        state = AgentState(
+            blocks={"locked": Block(label="locked", value="x", read_only=True)}
+        )
+        with pytest.raises(ValueError, match="read-only"):
+            state.set_block(Block(label="locked", value="new"))
+
+
+# ---------------------------------------------------------------------------
+# Block invariant enforcement (GPT audit blocker)
+# ---------------------------------------------------------------------------
+
+class TestBlockInvariants:
+    """Verify that Block enforces read-only and limit on EVERY mutation,
+    not just construction. Direct attribute assignment must be guarded."""
+
+    def test_direct_value_mutation_blocked_when_read_only(self):
+        """block.value = 'new' must raise on read-only blocks."""
+        b = Block(label="ro", value="original", read_only=True)
+        with pytest.raises(ValueError, match="read-only"):
+            b.value = "changed"
+
+    def test_direct_value_mutation_blocked_over_limit(self):
+        """block.value = 'too long' must raise when exceeding limit."""
+        b = Block(label="small", value="ok", limit=10)
+        with pytest.raises(ValueError, match="exceeds limit"):
+            b.value = "x" * 20
+
+    def test_direct_value_mutation_allowed_when_valid(self):
+        """block.value = 'new' should work for non-read-only within limit."""
+        b = Block(label="open", value="old", limit=100)
+        b.value = "new"
+        assert b.value == "new"
+
+    def test_cannot_unlock_read_only(self):
+        """Cannot set read_only=False on a read-only block."""
+        b = Block(label="ro", value="locked", read_only=True)
+        with pytest.raises(ValueError, match="cannot be unlocked"):
+            b.read_only = False
+
+    def test_read_only_value_survives(self):
+        """Read-only block value is accessible but not mutable."""
+        b = Block(label="ro", value="sacred", read_only=True)
+        assert b.value == "sacred"
+        with pytest.raises(ValueError):
+            b.value = "profane"
+        assert b.value == "sacred"
+
+
+# ---------------------------------------------------------------------------
+# Message role validation (GPT non-blocker)
+# ---------------------------------------------------------------------------
+
+class TestMessageRoleValidation:
+    def test_valid_roles_accepted(self):
+        for role in ("system", "user", "assistant", "tool"):
+            m = Message(role=role, content="test")
+            assert m.role == role
+
+    def test_invalid_role_rejected(self):
+        with pytest.raises(ValueError, match="Invalid message role"):
+            Message(role="admin", content="test")
+
+    def test_empty_role_rejected(self):
+        with pytest.raises(ValueError, match="Invalid message role"):
+            Message(role="", content="test")

@@ -25,6 +25,27 @@ from typing import Any, Protocol, runtime_checkable
 
 from nanoletta.types import AgentState, Block, LLMConfig, Message, Tool, ToolCall, ToolResult
 
+# ---------------------------------------------------------------------------
+# LLM response type (return contract for LLMClient)
+# ---------------------------------------------------------------------------
+
+@runtime_checkable
+class LLMResponse(Protocol):
+    """Typed contract for LLM completion responses.
+
+    Implementations must provide these attributes.
+    The agent loop accesses content and tool_calls directly.
+    """
+
+    @property
+    def content(self) -> str: ...
+
+    @property
+    def tool_calls(self) -> list[ToolCall]: ...
+
+    @property
+    def usage(self) -> dict[str, int]: ...
+
 
 # ---------------------------------------------------------------------------
 # 1. LLMClient — talk to a language model
@@ -46,7 +67,7 @@ class LLMClient(Protocol):
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         config: LLMConfig,
-    ) -> dict[str, Any]:
+    ) -> LLMResponse:
         """Send a chat completion request.
 
         Args:
@@ -55,12 +76,10 @@ class LLMClient(Protocol):
             config: Model configuration (model name, temperature, etc.)
 
         Returns:
-            Raw completion response dict with at minimum:
-            {
-                "content": str,
-                "tool_calls": [{"id": str, "function": {"name": str, "arguments": str}}],
-                "usage": {"prompt_tokens": int, "completion_tokens": int},
-            }
+            LLMResponse with typed attributes:
+            - content: str (text response, may be empty if tool_calls present)
+            - tool_calls: list[ToolCall] (parsed tool invocations, may be empty)
+            - usage: dict[str, int] (prompt_tokens, completion_tokens)
         """
         ...
 

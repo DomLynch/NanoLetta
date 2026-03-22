@@ -220,8 +220,12 @@ class SQLiteStore:
 
     async def get_messages(self, agent_id: str, limit: int = 50) -> list[Message]:
         conn = self._get_conn()
+        # Subquery gets most recent N (DESC), outer query re-orders oldest→newest (ASC)
         rows = conn.execute(
-            "SELECT * FROM messages WHERE agent_id = ? ORDER BY created_at ASC LIMIT ?",
+            """SELECT * FROM (
+                SELECT * FROM messages WHERE agent_id = ?
+                ORDER BY created_at DESC LIMIT ?
+            ) ORDER BY created_at ASC""",
             (agent_id, limit),
         ).fetchall()
         return [

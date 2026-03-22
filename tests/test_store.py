@@ -164,6 +164,22 @@ class TestSessionStore:
         loaded = await store.get_messages("agent_1", limit=5)
         assert len(loaded) == 5
 
+    async def test_limit_returns_most_recent(self, store):
+        """With limit, should return the MOST RECENT N messages, not the oldest."""
+        msgs = [
+            Message(role="user", content=f"msg {i}", agent_id="agent_1",
+                    created_at=f"2026-01-01T{i:02d}:00:00")
+            for i in range(10)
+        ]
+        await store.save_messages("agent_1", msgs)
+
+        loaded = await store.get_messages("agent_1", limit=3)
+        assert len(loaded) == 3
+        # Should be msg 7, 8, 9 (most recent), ordered oldest→newest
+        assert loaded[0].content == "msg 7"
+        assert loaded[1].content == "msg 8"
+        assert loaded[2].content == "msg 9"
+
     async def test_tool_calls_round_trip(self, store):
         msg = Message(
             role="assistant",

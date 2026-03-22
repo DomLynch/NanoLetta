@@ -229,7 +229,7 @@ class ToolResult:
 class AgentState:
     """Complete state of a single agent.
 
-    Deliberately minimal. 8 core fields instead of Letta's 25+.
+    Deliberately minimal. 7 core fields instead of Letta's 25+.
     No org/user/project/template/identity/group coupling.
 
     The agent loop loads this at the start of each step,
@@ -243,7 +243,6 @@ class AgentState:
     blocks: dict[str, Block] = field(default_factory=dict)
     tools: list[Tool] = field(default_factory=list)
     llm_config: LLMConfig = field(default_factory=LLMConfig)
-    message_ids: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def get_block(self, label: str) -> Block:

@@ -439,3 +439,80 @@ class TestUsageTracking:
         assert result.usage["completion_tokens"] == 80
         assert result.usage["total_tokens"] == 300
         assert result.steps == 2
+
+
+@pytest.mark.asyncio
+class TestGovernorIntegration:
+    async def test_governor_hooks_fire_without_crash(self):
+        """Governor hooks fire during step and don't crash the loop."""
+        from nanoletta.governor import Governor
+        gov = Governor()
+
+        agent, *_ = _make_agent(
+            llm_responses=[
+                MockLLMResponse(
+                    tool_calls=[ToolCall(id="call_1", name="send_message", arguments={"message": "Hi"})]
+                ),
+            ]
+        )
+        agent.governor = gov
+
+        result = await agent.step("Hello")
+        assert result.content == "Hi"
+        assert result.steps == 1
+
+    async def test_governor_hooks_fire_on_memory_tool(self):
+        """post_tool hook fires when a memory tool is executed."""
+        from nanoletta.governor import Governor, GovernorConfig
+
+        hook_log: list[str] = []
+
+        class TrackingGovernor(Governor):
+            async def post_tool(self, user_message, ai_response, tool_call, agent_state):
+                hook_log.append(f"post_tool:{tool_call.name}")
+                return await super().post_tool(user_message, ai_response, tool_call, agent_state)
+
+            async def pre_step(self, user_message, agent_state):
+                hook_log.append("pre_step")
+                return await super().pre_step(user_message, agent_state)
+
+            async def post_step(self, user_message, ai_response, agent_state):
+                hook_log.append("post_step")
+                return await super().post_step(user_message, ai_response, agent_state)
+
+        agent, *_ = _make_agent(
+            llm_responses=[
+                MockLLMResponse(
+                    tool_calls=[ToolCall(id="call_1", name="memory_str_replace", arguments={"label": "x", "old": "a", "new": "b"})]
+                ),
+                MockLLMResponse(
+                    tool_calls=[ToolCall(id="call_2", name="send_message", arguments={"message": "Done"})]
+                ),
+            ]
+        )
+        agent.governor = TrackingGovernor()
+
+        result = await agent.step("Update memory")
+
+        assert "pre_step" in hook_log
+        assert "post_tool:memory_str_replace" in hook_log
+        assert "post_step" in hook_log
+
+    async def test_disabled_governor_no_calls(self):
+        """When all hooks disabled, governor is truly inactive."""
+        from nanoletta.governor import Governor, GovernorConfig
+
+        config = GovernorConfig(
+            enable_consistency_check=False,
+            enable_correction_bridge=False,
+            enable_open_questions=False,
+            enable_consciousness_block=False,
+            enable_initiative=False,
+        )
+        gov = Governor(config)
+
+        agent, llm, *_ = _make_agent()
+        agent.governor = gov
+
+        result = await agent.step("Hello")
+        assert result.content == "Done"  # Default mock response

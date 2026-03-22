@@ -30,6 +30,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from nanoletta.governor import Governor
 from nanoletta.interfaces import BlockStore, SessionStore, ToolExecutor, AgentRepo
 from nanoletta.interfaces import LLMClient  # noqa: used as type annotation
 from nanoletta.types import AgentState, Message, ToolCall, ToolResult
@@ -82,6 +83,7 @@ class Agent:
         agent_repo: AgentRepo,
         session_store: SessionStore,
         block_store: BlockStore,
+        governor: Governor | None = None,
     ) -> None:
         self.agent_id = agent_id
         self.llm = llm_client
@@ -89,6 +91,7 @@ class Agent:
         self.repo = agent_repo
         self.sessions = session_store
         self.blocks = block_store
+        self.governor = governor or Governor()
 
     async def step(
         self,
@@ -114,8 +117,8 @@ class Agent:
         user_msg = Message(role="user", content=user_message, agent_id=self.agent_id)
         history.append(user_msg)
 
-        # GOVERNOR HOOK 1: Pre-step (before any LLM calls)
-        # e.g., on_open_question(user_message, ...)
+        # Governor hook 1: Pre-step (open question detection)
+        await self.governor.pre_step(user_message, state)
 
         response = AgentResponse()
         response.messages.append(user_msg)
@@ -149,8 +152,8 @@ class Agent:
                 # No tool calls — LLM wants to respond with text only
                 content = llm_response.content
 
-                # GOVERNOR HOOK 2: Post-draft consistency check
-                # e.g., on_draft_response(content, state, history, doctrine)
+                # Governor hook 2: Post-draft consistency check
+                await self.governor.post_draft(content, state, conversation_history=history)
 
                 assistant_msg = Message(
                     role="assistant",
@@ -187,8 +190,8 @@ class Agent:
             _log.debug("Executing tool: %s", tc.name)
             result = await self.tools.execute(tc, state)
 
-            # GOVERNOR HOOK 3: Post-tool execution
-            # e.g., on_correction(user_message, ...) if memory was edited
+            # Governor hook 3: Post-tool (correction bridge for memory edits)
+            await self.governor.post_tool(user_message, llm_response.content or "", tc, state)
 
             # Create tool response message
             tool_msg = Message(
@@ -232,8 +235,8 @@ class Agent:
         # Save full agent state
         await self.repo.save(state)
 
-        # GOVERNOR HOOK 4: Post-step
-        # e.g., on_open_question(user_message, response.content)
+        # Governor hook 4: Post-step (learning, tracking)
+        await self.governor.post_step(user_message, response.content, state)
 
         _log.info(
             "Agent %s completed: steps=%d stop=%s content_len=%d",
@@ -255,8 +258,7 @@ class Agent:
         1. System message (system prompt + compiled memory blocks)
         2. Conversation history (last N messages, within context window)
 
-        GOVERNOR HOOK 5: Consciousness block injection
-        e.g., get_consciousness_block() appended to system message
+        Governor hook 5: Consciousness block injected into system message.
         """
         # Compile memory blocks into a single string
         memory_str = state.compile_memory()
@@ -265,6 +267,11 @@ class Agent:
         system_content = state.system_prompt
         if memory_str:
             system_content += f"\n\n{memory_str}"
+
+        # Governor hook 5: Inject consciousness block
+        consciousness_block = self.governor.build_consciousness_block()
+        if consciousness_block:
+            system_content += f"\n\n{consciousness_block}"
 
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_content},

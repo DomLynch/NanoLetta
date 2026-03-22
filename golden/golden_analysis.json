@@ -1,0 +1,62 @@
+{
+  "retain": {
+    "total_scenarios": 50,
+    "successful": 50,
+    "failed": 0,
+    "failed_ids": [],
+    "total_facts_extracted": 50,
+    "total_tokens_used": 229194,
+    "total_time_seconds": 340.9,
+    "avg_time_per_scenario": 6.8,
+    "avg_facts_per_input": 1.0,
+    "avg_tokens_per_input": 4584.0,
+    "by_category": {
+      "personal": {
+        "total": 15,
+        "success": 15,
+        "facts": 15,
+        "tokens": 70698,
+        "time": 101.53000000000002
+      },
+      "business": {
+        "total": 15,
+        "success": 15,
+        "facts": 15,
+        "tokens": 66640,
+        "time": 93.97
+      },
+      "conversational": {
+        "total": 20,
+        "success": 20,
+        "facts": 20,
+        "tokens": 91856,
+        "time": 145.42
+      }
+    }
+  },
+  "recall": {
+    "total_queries": 50,
+    "successful": 50,
+    "failed": 0,
+    "failed_ids": [],
+    "empty_results": [],
+    "total_time_seconds": 54.6,
+    "avg_time_per_query": 1.09,
+    "avg_results_per_query": 110.9,
+    "dedup_issues": [],
+    "dedup_issue_count": 0
+  },
+  "reflect": {
+    "total_queries": 10,
+    "successful": 10,
+    "failed": 0,
+    "failed_ids": [],
+    "empty_reflections": [
+      "f08"
+    ],
+    "total_time_seconds": 972.6,
+    "avg_time_per_query": 97.3,
+    "avg_response_length_chars": 7302.0,
+    "avg_facts_cited": 0.0
+  }
+}

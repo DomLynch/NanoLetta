@@ -304,7 +304,7 @@ class TestContextBuilding:
                 system_prompt="You are helpful.",
                 blocks={
                     "persona": Block(label="persona", value="I am NanoLetta"),
-                    "human": Block(label="human", value="The user is Dominic"),
+                    "human": Block(label="human", value="The user is Alex"),
                 },
                 tools=[Tool(name="send_message", description="Send message")],
                 llm_config=LLMConfig(model="test"),
@@ -320,7 +320,7 @@ class TestContextBuilding:
         assert "[persona]" in system_msg["content"]
         assert "I am NanoLetta" in system_msg["content"]
         assert "[human]" in system_msg["content"]
-        assert "The user is Dominic" in system_msg["content"]
+        assert "The user is Alex" in system_msg["content"]
 
     async def test_user_message_in_context(self):
         """User's message appears in the context sent to LLM."""

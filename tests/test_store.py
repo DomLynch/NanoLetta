@@ -45,7 +45,7 @@ class TestAgentRepo:
         created = await store.create(
             name="loader",
             system_prompt="Test prompt",
-            blocks={"human": Block(label="human", value="Dominic")},
+            blocks={"human": Block(label="human", value="Alex")},
         )
 
         loaded = await store.load(created.id)
@@ -53,7 +53,7 @@ class TestAgentRepo:
         assert loaded.id == created.id
         assert loaded.name == "loader"
         assert loaded.system_prompt == "Test prompt"
-        assert loaded.get_block("human").value == "Dominic"
+        assert loaded.get_block("human").value == "Alex"
 
     async def test_load_nonexistent_raises(self, store):
         with pytest.raises(KeyError, match="not found"):
@@ -98,14 +98,14 @@ class TestBlockStore:
     async def test_save_and_get_blocks(self, store):
         blocks = {
             "persona": Block(label="persona", value="I am an agent"),
-            "human": Block(label="human", value="The user is Dom"),
+            "human": Block(label="human", value="The user is Alex"),
         }
         await store.save_blocks("agent_1", blocks)
 
         loaded = await store.get_blocks("agent_1")
         assert len(loaded) == 2
         assert loaded["persona"].value == "I am an agent"
-        assert loaded["human"].value == "The user is Dom"
+        assert loaded["human"].value == "The user is Alex"
 
     async def test_save_single_block(self, store):
         await store.save_block("agent_1", Block(label="notes", value="hello"))
@@ -204,7 +204,7 @@ class TestRoundTrip:
             system_prompt="Be helpful",
             blocks={
                 "persona": Block(label="persona", value="I am v1"),
-                "human": Block(label="human", value="User is Dom"),
+                "human": Block(label="human", value="User is Alex"),
             },
             tools=[Tool(name="send_message")],
             llm_config=LLMConfig(model="test-model"),
@@ -227,7 +227,7 @@ class TestRoundTrip:
 
         assert reloaded.name == "lifecycle_test"
         assert reloaded.get_block("persona").value == "I am v2 — updated during reasoning"
-        assert reloaded.get_block("human").value == "User is Dom"
+        assert reloaded.get_block("human").value == "User is Alex"
         assert len(reloaded.tools) == 1
         assert reloaded.llm_config.model == "test-model"
 

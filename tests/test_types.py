@@ -257,14 +257,14 @@ class TestAgentState:
         state = AgentState(
             blocks={
                 "persona": Block(label="persona", value="I am an agent"),
-                "human": Block(label="human", value="The user is Dominic"),
+                "human": Block(label="human", value="The user is Alex"),
             }
         )
         memory = state.compile_memory()
         assert "[persona]" in memory
         assert "I am an agent" in memory
         assert "[human]" in memory
-        assert "The user is Dominic" in memory
+        assert "The user is Alex" in memory
 
     def test_compile_memory_skips_empty(self):
         state = AgentState(

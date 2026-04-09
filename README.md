@@ -16,6 +16,26 @@ One dependency. Zero infrastructure. Runs anywhere Python runs.
 
 ---
 
+## Architecture
+
+```mermaid
+flowchart LR
+    U["User message"] --> A["Agent.step()"]
+    A --> C["LLM client"]
+    C --> D{"tool call?"}
+    D -- "memory edit" --> M["MemoryToolExecutor"]
+    M --> S["SQLite store"]
+    S --> A
+    D -- "custom tool" --> T["Your tool handler"]
+    T --> A
+    D -- "send_message" --> R["Assistant response"]
+    G["Governor hooks (optional)"] -.-> A
+```
+
+NanoLetta keeps one loop: reason, call tools, persist memory, continue until the agent sends a response.
+
+---
+
 ## Size comparison
 
 | Component | Letta | NanoLetta | Reduction |

@@ -45,6 +45,7 @@ class GovernorConfig:
     enable_open_questions: bool = True
     enable_consciousness_block: bool = True
     enable_initiative: bool = True
+    person: str = "user"  # name passed to open-question hooks
 
 
 @dataclass
@@ -87,7 +88,7 @@ class Governor:
 
         try:
             from skills.consciousness_runtime import on_open_question
-            result = on_open_question(user_message, "", person="Dominic")
+            result = on_open_question(user_message, "", person=self.config.person)
             return GovernorResult(hook="pre_step", result=result)
         except ImportError:
             return GovernorResult(hook="pre_step", active=False, error="consciousness_runtime not available")
@@ -175,7 +176,7 @@ class Governor:
 
         try:
             from skills.consciousness_runtime import on_open_question
-            result = on_open_question(user_message, ai_response, person="Dominic")
+            result = on_open_question(user_message, ai_response, person=self.config.person)
             return GovernorResult(hook="post_step", result=result)
         except ImportError:
             return GovernorResult(hook="post_step", active=False, error="consciousness_runtime not available")

@@ -143,30 +143,51 @@ The agent can modify its own memory blocks mid-conversation using built-in tools
 
 ### Governor hooks
 
-Five hook points let you inject logic without modifying the core loop:
+Six hook points let you inject governance logic without modifying the core loop. Pass a `GovernanceRuntime` to activate them — without one, all hooks are no-ops:
 
 ```python
-from nanoletta.governor import Governor, GovernorConfig
+from nanoletta.governor import Governor, GovernorConfig, GovernanceRuntime
 
-class MyGovernor(Governor):
-    async def post_draft(self, draft, state, **kwargs):
-        # Called after LLM generates a response — check it before sending
-        if "bad word" in draft:
-            # modify draft or flag it
-            pass
-        return await super().post_draft(draft, state, **kwargs)
+class MyRuntime:
+    def on_open_question(self, user_msg, ai_response, person="user"):
+        # Track unanswered questions, update a knowledge gap log, etc.
+        return {}
+
+    def on_draft_response(self, draft, self_model, history, doctrine):
+        # Consistency / safety check before response is committed
+        # Return {"block": True} to signal the response should be held
+        return {"ok": True}
+
+    def on_correction(self, user_msg, ai_response, correction_type):
+        # Called when the agent edits its own memory blocks
+        return {}
+
+    def get_context_block(self, max_items=3):
+        # Return a string injected into the system prompt each turn
+        return None  # or "Active reminders:\n- ..."
+
+    def on_daemon_cycle(self, commitments, emotional_state,
+                        homeostasis_state, last_user_ts, chat_id):
+        # Proactive outreach / initiative decisions
+        return {}
+
+governor = Governor(
+    config=GovernorConfig(person="Alice"),
+    runtime=MyRuntime(),
+)
+agent = Agent(..., governor=governor)
 ```
 
 | Hook | When it fires |
 |------|--------------|
 | `pre_step` | Before any LLM call |
 | `post_draft` | After LLM generates a response |
-| `post_tool` | After a tool executes |
+| `post_tool` | After a memory-editing tool executes |
 | `post_step` | After the full step completes |
-| `build_consciousness_block` | During context assembly |
-| `daemon_cycle` | External heartbeat (proactive agents) |
+| `build_consciousness_block` | During context assembly (injects text into system prompt) |
+| `daemon_cycle` | External heartbeat (proactive / initiative logic) |
 
-All hooks fail silently — a broken hook cannot crash the agent loop.
+All hooks fail silently — a broken runtime cannot crash the agent loop. Subclass `Governor` instead of using a runtime if you prefer inheritance over composition.
 
 ---
 

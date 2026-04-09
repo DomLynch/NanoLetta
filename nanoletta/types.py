@@ -47,8 +47,8 @@ class Block:
     - value length cannot exceed limit
 
     Examples:
-        Block(label="persona", value="You are a cognitive twin of Dominic...")
-        Block(label="human", value="Dominic is a founder based in Dubai...")
+        Block(label="persona", value="You are a helpful assistant...")
+        Block(label="human", value="The user is a software engineer based in London...")
         Block(label="stance", value="listen")
     """
 

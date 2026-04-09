@@ -3,7 +3,7 @@
 > Letta's cognitive agent loop — stripped from 134,000 lines to 1,900.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License-Apache--2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-126%20passing-brightgreen.svg)](#tests)
 
 NanoLetta is the cognitive kernel extracted from [Letta](https://github.com/letta-ai/letta). It keeps the one thing that actually matters — the reasoning loop — and removes everything else.

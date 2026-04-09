@@ -59,14 +59,17 @@ class GovernorResult:
 
 
 class Governor:
-    """Governor layer — consciousness and governance hooks for the agent loop.
+    """Governor layer — governance and consciousness hooks for the agent loop.
 
-    Wraps Brain's consciousness modules (0-5) behind a clean interface.
+    Wraps external governance modules behind a clean interface.
     Each method corresponds to one hook point in the agent loop.
 
-    When Brain modules are available, delegates to them.
-    When they're not (e.g., running standalone NanoLetta), all hooks
-    are no-ops that return safe defaults.
+    When governance modules are available (importable via `skills.consciousness_runtime`),
+    delegates to them. When they're not — e.g. running NanoLetta standalone —
+    all hooks are no-ops that return safe defaults.
+
+    Override any method to wire in your own governance logic without
+    modifying the core agent loop.
     """
 
     def __init__(self, config: GovernorConfig | None = None) -> None:

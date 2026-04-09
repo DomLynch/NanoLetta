@@ -6,3 +6,9 @@ __pycache__/
 dist/
 build/
 .env
+
+*.db
+
+# Project-specific integration files (not part of the public package)
+golden/
+INTEGRATION-HANDOVER.md

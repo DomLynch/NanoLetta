@@ -1,10 +1,10 @@
 # nanoletta
 
-> Letta's cognitive agent loop — stripped from 134,000 lines to 1,900.
+> Letta's cognitive agent loop. 134,000 lines stripped to 1,900.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License-Apache--2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-126%20passing-brightgreen.svg)](#tests)
+[![Tests](https://img.shields.io/badge/tests-135%20passing-brightgreen.svg)](#tests)
 
 NanoLetta is the cognitive kernel extracted from [Letta](https://github.com/letta-ai/letta). It keeps the one thing that actually matters — the reasoning loop — and removes everything else.
 
@@ -216,7 +216,7 @@ OLLAMA_URL=http://localhost:11434/v1 OLLAMA_MODEL=llama3.2 \
   python3 -m pytest tests/test_e2e_ollama.py -v -s
 ```
 
-126 unit tests. Covers types, agent loop, memory tools, SQLite store, LLM client, governor hooks.
+135 unit tests. Covers types, agent loop, memory tools, SQLite store, LLM client, governor hooks.
 
 ---
 
@@ -279,7 +279,7 @@ Swap any of the five protocol interfaces (`LLMClient`, `BlockStore`, `SessionSto
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE](LICENSE).
 
 ---
 

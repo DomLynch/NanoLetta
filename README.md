@@ -219,8 +219,8 @@ The `Governor` replaces Letta's step-manager callbacks with a cleaner hook inter
 
 NanoLetta pairs naturally with:
 
-- **[Temporal](https://github.com/domininclynch/temporal)** — temporal knowledge graph (Graphiti → 2.8k LOC). Knows *when* facts were true.
-- **[Lucid](https://github.com/domininclynch/lucid)** — semantic memory runtime (Hindsight → 2k LOC). `retain() / recall() / reflect()`.
+- **[Temporal](https://github.com/DomLynch/Temporal)** — temporal knowledge graph (Graphiti → 2.8k LOC). Knows *when* facts were true.
+- **[Lucid](https://github.com/DomLynch/Lucid)** — semantic memory runtime (Hindsight → 2k LOC). `retain() / recall() / reflect()`.
 
 Wire them into NanoLetta via custom tools and the Governor hooks.
 

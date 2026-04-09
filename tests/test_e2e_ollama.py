@@ -20,7 +20,7 @@ import tempfile
 import pytest
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5-brain-4b")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
 
 pytestmark = pytest.mark.skipif(not OLLAMA_URL, reason="OLLAMA_URL not set")
 

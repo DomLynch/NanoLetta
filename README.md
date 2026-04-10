@@ -307,4 +307,4 @@ Apache 2.0. See [LICENSE](LICENSE).
 
 The cognitive loop design and memory block concept come from [Letta](https://github.com/letta-ai/letta) (Apache 2.0), originally MemGPT. NanoLetta is an independent extraction — not affiliated with Letta AI.
 
-Extracted from Letta at commit `bb52a89`. Not tracking upstream — this is a stable snapshot, not a rolling fork.
+Extracted from Letta's core cognitive-loop design. Not tracking upstream; this is a stable standalone extraction, not a rolling fork.

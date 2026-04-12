@@ -1,6 +1,6 @@
-# nanoletta
+# NanoLetta
 
-> Letta's cognitive agent loop. 134,000 lines stripped to 1,900.
+> Minimal cognitive agent loop. Letta's cognitive runtime stripped from 134,000 lines to 1,900.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License-Apache--2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
